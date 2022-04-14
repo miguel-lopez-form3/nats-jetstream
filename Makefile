@@ -1,3 +1,11 @@
+.PHONY: up
+up:
+	docker-compose up -d --build
+
+.PHONY: down
+down:
+	docker-compose down -v
+
 .PHONY: certs
 certs:
 	go run ./cmd/certs/main.go
