@@ -34,11 +34,12 @@ func CreateCAToFileSystem() (*Cert, error) {
 			StreetAddress: []string{"7 Harp Ln"},
 			PostalCode:    []string{"EC3R 6DP"},
 		},
-		NotBefore:   time.Now(),
-		NotAfter:    time.Now().AddDate(1, 0, 0),
-		IsCA:        true,
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
-		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().AddDate(1, 0, 0),
+		KeyUsage:              x509.KeyUsageCertSign,
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		MaxPathLenZero:        true,
 	}
 
 	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
@@ -56,7 +57,7 @@ func CreateCAToFileSystem() (*Cert, error) {
 	}
 
 	keyBytes := x509.MarshalPKCS1PrivateKey(caPrivKey)
-	keyOut, err := os.OpenFile("certs/ca/rootCA-key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := os.OpenFile("certs/ca/rootCA-key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0400)
 	if err != nil {
 		return nil, err
 	}
