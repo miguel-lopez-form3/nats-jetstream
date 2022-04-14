@@ -21,6 +21,7 @@ func Connect() nats.JetStreamContext {
 		MinVersion:   tls.VersionTLS12,
 	}
 
+	// `nats.RootCAs` not really needed, but it helps with the error message when using the Go certificates
 	nc, err := nats.Connect("nats://localhost:4222", nats.Secure(config), nats.RootCAs("./certs/ca/rootCA.pem"))
 	if err != nil {
 		log.Fatalf("failed to connect to the NATS server: %v", err)
