@@ -54,13 +54,16 @@ At the end you should see up to 10 messages as that's what `pullsub` does at the
 
 ## Go Setup
 
+**UPDATE:** This is working now. The CA `x509.Certificate` was missing a property: `BasicConstraintsValid: true,`. Realised it after looking at `mkcert`'s [implementation](https://github.com/FiloSottile/mkcert/blob/0a3190b1659e514d6e9b03eedfa25049d046000b/cert.go#L308).
+
+The following command should work out of the box to run everything (do a `make clean` before if certs are there): `make up && make syncpub && make pullsub`
+
 I also tried creating the certificates with Go, just by using the code from the TCH RTP repo it didn't work and it keeps complaining about the handshake failing, after some reading it was clear there was a mismatch between client and server (which led me to the solution above).
 
-I've added some code to `certs.go` to first generate a CA certificate which is then used to sign the client and server certificates, but it keeps complaining about `Form3` not being a valid certificate authority (paraphrasing here).
+I've added some code to `certs.go` to first generate a CA certificate which is then used to sign the client and server certificates, but it kept complaining about `Form3` not being a valid certificate authority (paraphrasing here).
 
 You can delete the certs with `make clean` and run `make certs` which should generate the CA, client and server certs in the same place as the `mkcert` setup and run the same tests as before.
 
 ## TODOs
 
-- [ ] compare `mkcert` certificates to Go certificates, there might be some missing config
-- [ ] try the `mkcert` approach in the TCH RTP repo
+- [ ] try the Go approach in the TCH RTP repo
