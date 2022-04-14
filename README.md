@@ -32,13 +32,25 @@ mkcert -client -cert-file ./certs/server/server.crt -key-file ./certs/server/ser
 mkcert -client -cert-file ./certs/server/server.crt -key-file ./certs/server/server.key nats ::1 127.0.0.1 0.0.0.0 localhost email@localhost
 ```
 
-5. Bring the environment up with `make up`
+5. Bring the environment up with:
 
-6. Publish a message to the stream by running `make syncpub` (it creates the streams)
+```
+make up
+```
 
-7. Consume the message from the stream by running `make pullsub` (it fetches 10 messages)
+6. Publish a message to the stream (it creates the streams):
 
-At the end you should see up to 10 messages as that's what the `pullsub` does at the moment.
+```
+make syncpub
+```
+
+7. Consume the message from the stream (it fetches 10 messages):
+
+```
+make pullsub
+```
+
+At the end you should see up to 10 messages as that's what `pullsub` does at the moment.
 
 ## Go Setup
 
@@ -46,4 +58,4 @@ I also tried creating the certificates with Go, just by using the code from the 
 
 I've added some code to `certs.go` to first generate a CA certificate which is then used to sign the client and server certificates, but it keeps complaining about `Form3` not being a valid certificate authority (paraphrasing here).
 
-You can manually delete the certs and run `make certs` which should generate the CA, client and server certs in the same place as the `mkcert` setup and run the same tests as before.
+You can delete the certs with `make clean` and run `make certs` which should generate the CA, client and server certs in the same place as the `mkcert` setup and run the same tests as before.

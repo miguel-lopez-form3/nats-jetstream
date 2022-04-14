@@ -10,6 +10,10 @@ down:
 certs:
 	go run ./cmd/certs/main.go
 
+.PHONY: clean
+clean:
+	rm certs/*/**.crt certs/*/**.key certs/*/**.pem
+
 .PHONY: syncpub
 syncpub:
 	go run ./cmd/syncpub/syncpub.go
