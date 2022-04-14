@@ -59,3 +59,8 @@ I also tried creating the certificates with Go, just by using the code from the 
 I've added some code to `certs.go` to first generate a CA certificate which is then used to sign the client and server certificates, but it keeps complaining about `Form3` not being a valid certificate authority (paraphrasing here).
 
 You can delete the certs with `make clean` and run `make certs` which should generate the CA, client and server certs in the same place as the `mkcert` setup and run the same tests as before.
+
+## TODOs
+
+- [ ] compare `mkcert` certificates to Go certificates, there might be some missing config
+- [ ] try the `mkcert` approach in the TCH RTP repo
