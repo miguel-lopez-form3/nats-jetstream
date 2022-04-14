@@ -29,7 +29,7 @@ mkcert -client -cert-file ./certs/server/server.crt -key-file ./certs/server/ser
 4. Generate the client certificates:
 
 ```
-mkcert -client -cert-file ./certs/server/server.crt -key-file ./certs/server/server.key nats ::1 127.0.0.1 0.0.0.0 localhost email@localhost
+mkcert -client -cert-file ./certs/client/client.crt -key-file ./certs/client/client.key nats ::1 127.0.0.1 0.0.0.0 localhost email@localhost
 ```
 
 5. Bring the environment up with:
