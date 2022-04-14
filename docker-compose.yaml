@@ -2,10 +2,10 @@ version: "3.5"
 services:
   nats:
     image: 288840537196.dkr.ecr.eu-west-1.amazonaws.com/nats:2.5.0-alpine
-    command: "--jetstream --m 8222 --trace --tlsverify --tlscert /etc/certs/server.crt --tlskey /etc/certs/server.key"
+    command: "--jetstream --m 8222 --trace --tlsverify --tlscert /etc/certs/server.crt --tlskey /etc/certs/server.key --tlscacert /etc/ca/rootCA.pem"
     ports:
       - "8222:8222"  # Enables NATS monitoring on http://localhost:8222 - https://docs.nats.io/nats-server/configuration/monitoring
       - "4222:4222"  # publish NATS port so tests can publish mock messages to streams
     volumes:
       - ./certs/server:/etc/certs
-      - '/etc/ssl/certs:/etc/ssl/certs'
+      - ./certs/ca:/etc/ca

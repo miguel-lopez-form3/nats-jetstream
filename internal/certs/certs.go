@@ -13,13 +13,71 @@ import (
 	"time"
 )
 
-func CreateCertKeyPairOnFileSystem(organisationId string) error {
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+type Cert struct {
+	Certificate      *x509.Certificate
+	PrivKey          *rsa.PrivateKey
+	CertificateBytes []byte
+}
+
+func CreateCAToFileSystem() (*Cert, error) {
+	caPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	ca := &x509.Certificate{
+		SerialNumber: big.NewInt(1658),
+		Subject: pkix.Name{
+			Organization:  []string{"Form3"},
+			Country:       []string{"UK"},
+			Province:      []string{""},
+			Locality:      []string{"London"},
+			StreetAddress: []string{"7 Harp Ln"},
+			PostalCode:    []string{"EC3R 6DP"},
+		},
+		NotBefore:   time.Now(),
+		NotAfter:    time.Now().AddDate(1, 0, 0),
+		IsCA:        true,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 	}
 
-	cert, err := generateSelfSignedCertificateAsBytes(key, "Form3")
+	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
+	if err != nil {
+		return nil, err
+	}
+
+	certOut, err := os.Create("certs/ca/rootCA.pem")
+	if err != nil {
+		return nil, err
+	}
+	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: caBytes})
+	if err != nil {
+		return nil, err
+	}
+
+	keyBytes := x509.MarshalPKCS1PrivateKey(caPrivKey)
+	keyOut, err := os.OpenFile("certs/ca/rootCA-key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, err
+	}
+	err = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: keyBytes})
+	if err != nil {
+		return nil, err
+	}
+	err = keyOut.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Cert{
+		Certificate:      ca,
+		PrivKey:          caPrivKey,
+		CertificateBytes: caBytes,
+	}, nil
+}
+
+func CreateCertKeyPairOnFileSystem(organisationId string, parentCert *Cert) error {
+	cert, err := generateSelfSignedCertificateAsBytes("Form3", parentCert)
 	if err != nil {
 		return err
 	}
@@ -31,18 +89,18 @@ func CreateCertKeyPairOnFileSystem(organisationId string) error {
 	if err != nil {
 		return err
 	}
-	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
+	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert.CertificateBytes})
 	if err != nil {
 		return err
 	}
 
-	keyBytes := x509.MarshalPKCS1PrivateKey(key)
+	keyBytes := x509.MarshalPKCS1PrivateKey(cert.PrivKey)
 	keyFilename := fmt.Sprintf("%s/%s.key", dir, organisationId)
 	keyOut, err := os.OpenFile(keyFilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
-	err = pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: keyBytes})
+	err = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: keyBytes})
 	if err != nil {
 		return err
 	}
@@ -51,7 +109,12 @@ func CreateCertKeyPairOnFileSystem(organisationId string) error {
 	return err
 }
 
-func generateSelfSignedCertificateAsBytes(key *rsa.PrivateKey, orgName string) ([]byte, error) {
+func generateSelfSignedCertificateAsBytes(orgName string, parentCert *Cert) (*Cert, error) {
+	key, err := rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		return nil, err
+	}
+
 	template := &x509.Certificate{
 		SerialNumber: big.NewInt(1658),
 		Subject: pkix.Name{
@@ -62,7 +125,7 @@ func generateSelfSignedCertificateAsBytes(key *rsa.PrivateKey, orgName string) (
 			StreetAddress: []string{"7 Harp Ln"},
 			PostalCode:    []string{"EC3R 6DP"},
 		},
-		IPAddresses:  []net.IP{net.IPv4(127, 0, 0, 1), net.IPv4(0, 0, 0, 0), net.IPv6loopback},
+		IPAddresses:  []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
 		NotBefore:    time.Now().Add(time.Minute * -5),
 		NotAfter:     time.Now().AddDate(1, 0, 0),
 		SubjectKeyId: []byte{1, 2, 3, 4, 6},
@@ -71,5 +134,27 @@ func generateSelfSignedCertificateAsBytes(key *rsa.PrivateKey, orgName string) (
 		DNSNames:     []string{"nats", "localhost"},
 	}
 
-	return x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
+	var parent *x509.Certificate
+	if parentCert == nil {
+		parent = template
+	} else {
+		parent = parentCert.Certificate
+	}
+
+	var priv *rsa.PrivateKey
+	if parentCert == nil {
+		priv = key
+	} else {
+		priv = parentCert.PrivKey
+	}
+
+	certBytes, err := x509.CreateCertificate(rand.Reader, template, parent, &key.PublicKey, priv)
+	if err != nil {
+		return nil, err
+	}
+	return &Cert{
+		Certificate:      template,
+		PrivKey:          key,
+		CertificateBytes: certBytes,
+	}, nil
 }

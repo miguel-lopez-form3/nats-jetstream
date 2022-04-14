@@ -21,7 +21,7 @@ func Connect() nats.JetStreamContext {
 		MinVersion:   tls.VersionTLS12,
 	}
 
-	nc, err := nats.Connect("tls://localhost:4222", nats.Secure(config))
+	nc, err := nats.Connect("nats://localhost:4222", nats.Secure(config))
 	if err != nil {
 		log.Fatalf("failed to connect to the NATS server: %v", err)
 	}

@@ -7,11 +7,15 @@ import (
 )
 
 func main() {
-	err := certs.CreateCertKeyPairOnFileSystem("server")
+	parentCA, err := certs.CreateCAToFileSystem()
+	if err != nil {
+		log.Fatalf("failed to create the CA: %v", err)
+	}
+	err = certs.CreateCertKeyPairOnFileSystem("server", parentCA)
 	if err != nil {
 		log.Fatalf("failed to create the server certs: %v", err)
 	}
-	err = certs.CreateCertKeyPairOnFileSystem("client")
+	err = certs.CreateCertKeyPairOnFileSystem("client", parentCA)
 	if err != nil {
 		log.Fatalf("failed to create the client certs: %v", err)
 	}
