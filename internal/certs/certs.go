@@ -24,7 +24,9 @@ func CreateCertKeyPairOnFileSystem(organisationId string) error {
 		return err
 	}
 
-	certFilename := fmt.Sprintf("certs/%s.crt", organisationId)
+	dir := fmt.Sprintf("certs/%s", organisationId)
+
+	certFilename := fmt.Sprintf("%s/%s.crt", dir, organisationId)
 	certOut, err := os.Create(certFilename)
 	if err != nil {
 		return err
@@ -35,7 +37,7 @@ func CreateCertKeyPairOnFileSystem(organisationId string) error {
 	}
 
 	keyBytes := x509.MarshalPKCS1PrivateKey(key)
-	keyFilename := fmt.Sprintf("certs/%s.key", organisationId)
+	keyFilename := fmt.Sprintf("%s/%s.key", dir, organisationId)
 	keyOut, err := os.OpenFile(keyFilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err

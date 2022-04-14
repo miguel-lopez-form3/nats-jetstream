@@ -1,40 +1,27 @@
 package jetstream
 
 import (
+	"crypto/tls"
 	"log"
 
 	"github.com/nats-io/nats.go"
 )
 
 func Connect() nats.JetStreamContext {
-	/*
-		certFile := "./certs/f-client.pem"
-		keyFile := "./certs/f-client-key.pem"
-		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-		if err != nil {
-			log.Fatalf("error parsing X509 certificate/key pair: %v", err)
-		}
+	certFile := "./certs/client/client.crt"
+	keyFile := "./certs/client/client.key"
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		log.Fatalf("error parsing X509 certificate/key pair: %v", err)
+	}
 
-		rootPEM, err := ioutil.ReadFile("./certs/rootCA.pem")
-		if err != nil || rootPEM == nil {
-			log.Fatalf("failed to read root certificate")
-		}
+	config := &tls.Config{
+		ServerName:   "nats",
+		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
+	}
 
-		pool := x509.NewCertPool()
-		ok := pool.AppendCertsFromPEM([]byte(rootPEM))
-		if !ok {
-			log.Fatal("failed to parse root certificate")
-		}
-
-		config := &tls.Config{
-			ServerName:   "localhost",
-			Certificates: []tls.Certificate{cert},
-			RootCAs:      pool,
-			MinVersion:   tls.VersionTLS12,
-		}
-	*/
-
-	nc, err := nats.Connect("nats://localhost:4222")
+	nc, err := nats.Connect("tls://localhost:4222", nats.Secure(config))
 	if err != nil {
 		log.Fatalf("failed to connect to the NATS server: %v", err)
 	}

@@ -1,3 +1,7 @@
+.PHONY: certs
+certs:
+	go run ./cmd/certs/main.go
+
 .PHONY: syncpub
 syncpub:
 	go run ./cmd/syncpub/syncpub.go

@@ -1,33 +1,11 @@
 version: "3.5"
 services:
-  nats1:
-    image: nats
-    ports:
-      - "8222:8222"
-      - "4222:4222"
-    #command: "--name NATS1 --cluster_name NATS -js -sd /data --cluster nats://0.0.0.0:6222 --routes=nats://ruserT0pS3cre3t@nats2:6222 --http_port 8222 --tls --tlscert /certs/f-client.pem --tlskey /certs/f-client-key.pem --tlscacert /certs/rootCA.pem"
-    command: "--name NATS1 --cluster_name NATS -js -sd /data --cluster nats://0.0.0.0:6222 --routes=nats://ruserT0pS3cre3t@nats2:6222 --http_port 8222"
-    networks: ["nats"]
-    volumes:
-    - ./jetstream-cluster/n1:/data
-    - './certs:/certs'
-    - /etc/ssl:/etc/ssl
-    - /etc/pki/tls/certs:/etc/pki/tls/certs
-  nats2:
-    image: nats
-    command: "--name NATS2 --cluster_name NATS -js -sd /data --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats1:6222"
-    networks: ["nats"]
-    volumes:
-    - ./jetstream-cluster/n2:/data
-    depends_on: ["nats1"]
-  nats3:
-    image: nats
-    command: "--name NATS3 --cluster_name NATS -js -sd /data --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats1:6222"
-    networks: ["nats"]
-    volumes:
-    - ./jetstream-cluster/n3:/data
-    depends_on: ["nats1"]
-
-networks:
   nats:
-    name: nats
+    image: 288840537196.dkr.ecr.eu-west-1.amazonaws.com/nats:2.5.0-alpine
+    command: "--jetstream --m 8222 --trace --tlsverify --tlscert /etc/certs/server.crt --tlskey /etc/certs/server.key"
+    ports:
+      - "8222:8222"  # Enables NATS monitoring on http://localhost:8222 - https://docs.nats.io/nats-server/configuration/monitoring
+      - "4222:4222"  # publish NATS port so tests can publish mock messages to streams
+    volumes:
+      - ./certs/server:/etc/certs
+      - '/etc/ssl/certs:/etc/ssl/certs'
